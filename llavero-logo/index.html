@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu logo en un llavero · Xtickers</title>
+<meta name="description" content="Subí el logo de tu empresa y miralo en 3D en un llavero con la forma de tu marca. Regalos empresariales Xtickers.">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#111114; --panel:#1a1a20; --line:#2c2c35; --text:#f4f4f6; --muted:#a0a0aa; --mag:#F0158B; --cyan:#12D6E0; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Poppins,Arial,sans-serif; }
+  .wrap { max-width:1080px; margin:0 auto; padding:28px 16px 48px; }
+  h1 { font-size:clamp(26px,5vw,40px); margin:0 0 6px; line-height:1.1; }
+  h1 span { color:var(--mag); }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  .grid { display:grid; grid-template-columns:1.2fr 1fr; gap:20px; align-items:start; }
+  @media (max-width:820px){ .grid { grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px; }
+  .visor { position:relative; width:100%; aspect-ratio:1; border-radius:12px; overflow:hidden; background:radial-gradient(circle at 50% 30%,#fbfbfc,#d6d6dc); }
+  .visor canvas { width:100% !important; height:100% !important; display:block; touch-action:none; }
+  .medida { position:absolute; left:12px; bottom:10px; font-size:12px; color:#55555f; background:rgba(255,255,255,.7); padding:3px 8px; border-radius:20px; }
+  .ayuda { position:absolute; right:12px; bottom:10px; font-size:12px; color:#55555f; }
+  h3 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:18px 0 10px; }
+  h3:first-child { margin-top:0; }
+  .subir { display:flex; align-items:center; justify-content:center; border:2px dashed var(--line); border-radius:12px; padding:18px; cursor:pointer; text-align:center; color:var(--muted); }
+  .subir:hover { border-color:var(--cyan); color:var(--text); }
+  .subir input { display:none; }
+  .formas { display:flex; flex-wrap:wrap; gap:8px; }
+  .formas button { background:#24242c; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:9px 12px; font:600 13px Poppins; cursor:pointer; }
+  .formas button.on { border-color:var(--mag); background:#2e1424; }
+  .colores { display:flex; flex-wrap:wrap; gap:8px; }
+  .sw { width:34px; height:34px; border-radius:50%; border:2px solid var(--line); cursor:pointer; }
+  .sw.on { outline:3px solid var(--cyan); outline-offset:2px; }
+  .nombre { font-size:12px; color:var(--muted); margin-top:6px; min-height:18px; }
+  .precio { display:flex; justify-content:space-between; align-items:baseline; margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+  .precio b { font-size:26px; }
+  .btn { display:block; width:100%; text-align:center; border:none; border-radius:12px; padding:14px; font:800 15px Poppins; cursor:pointer; text-decoration:none; margin-top:12px; }
+  .btn-main { background:var(--mag); color:#fff; }
+  .btn-main:disabled { opacity:.5; cursor:default; }
+  .btn-sec { background:#24242c; color:var(--text); border:1px solid var(--line); }
+  .codigo { display:none; margin-top:14px; padding:14px; border-radius:12px; background:#10262a; border:1px solid var(--cyan); }
+  .codigo .c { font-size:28px; font-weight:800; letter-spacing:.05em; color:var(--cyan); }
+  .nota { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.5; }
+  .err { color:#ff6b86; font-size:13px; margin-top:8px; min-height:18px; }
+  input.txt { width:100%; background:#24242c; border:1px solid var(--line); border-radius:10px; color:var(--text); font:14px Poppins; padding:10px 12px; }
+  .hp { position:absolute; left:-9999px; }
+</style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tu logo en un <span>llavero 3D</span></h1>
+  <p class="sub">Subí el logo de tu marca y miralo en 3D, con la forma de tu logo y en nuestros colores. Ideal para regalar a tu equipo o a tus clientes.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="visor" id="visor"><span class="medida">5 cm · 4 mm de espesor</span><span class="ayuda">Arrastrá para girarlo</span></div>
+      <div class="nota">Vista ilustrativa. Antes de imprimir te mandamos el diseño final para aprobar.</div>
+    </div>
+    <div class="card">
+      <h3>1 · Tu logo</h3>
+      <label class="subir"><input type="file" id="archivo" accept="image/png,image/jpeg,image/svg+xml,image/webp"><span id="txtSubir">Tocá para subir tu logo (PNG, JPG o SVG)</span></label>
+      <h3>2 · Forma</h3>
+      <div class="formas" id="formas"></div>
+      <h3>3 · Color del llavero</h3>
+      <div class="colores" id="colBase"></div><div class="nombre" id="nomBase"></div>
+      <h3>4 · Color del logo</h3>
+      <div class="colores" id="colLogo"></div><div class="nombre" id="nomLogo"></div>
+      <div class="precio"><span>Precio por llavero<br><span class="nota">Medida estándar 5 cm · incluye argolla</span></span><b>$4.500</b></div>
+      <input class="txt" id="nombre" placeholder="Tu nombre o el de tu empresa (opcional)" style="margin-top:14px">
+      <input class="hp" id="web" tabindex="-1" autocomplete="off">
+      <button class="btn btn-main" id="guardar" disabled>Guardar mi diseño y comprar</button>
+      <div class="err" id="err"></div>
+      <div class="codigo" id="codigo">
+        <div class="nota" style="margin:0">Tu código de diseño:</div>
+        <div class="c" id="cod"></div>
+        <div class="nota">Comprá la cantidad que quieras y <b>escribí este código en la nota del pedido</b> para que sepamos cuál es tu logo.</div>
+        <a class="btn btn-main" id="comprar" target="_top" href="https://www.xtickers.com.ar/productos/llavero-con-la-forma-de-tu-logo-12r4c/">Ir a comprar</a>
+      </div>
+      <button class="btn btn-sec" id="bajar">Descargar la vista previa</button>
+    </div>
+  </div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const API = 'https://script.google.com/macros/s/AKfycbw0cvT0htdovVQFek6s0ImfpGaA0IGZmDUDgMaeArhGyvitA68D0Cj-88CqRlDb_emB8Q/exec';
+const COLORES = [['Blanco','#efefec'],['Negro','#1d1d1f'],['Rojo','#c0222a'],['Verde pino','#1d5a3e'],['Verde oliva','#6b793a'],
+  ['Azul','#1d4c9e'],['Durazno','#f0ad86'],['Lila','#b49cd6'],['Dorado','#c69c45'],['Marrón claro','#ad865c']];
+const FORMAS = [['logo','Forma de tu logo'],['redondo','Redondo'],['rect','Rectangular']];
+const MM = 50, N = 220, ESP_BASE = 3, ESP_LOGO = 1;     // 5 cm, grilla de N×N, espesores en mm
+const st = { forma: 'logo', base: 0, logo: 1, img: null };
+
+/* ---------- escena ---------- */
+const visor = document.getElementById('visor');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+visor.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const camera = new THREE.PerspectiveCamera(32, 1, 1, 1000);
+camera.position.set(0, 4, 98);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.enablePan = false; controls.target.set(0, 4, 0);
+controls.minDistance = 70; controls.maxDistance = 220; controls.minAzimuthAngle = -1.3; controls.maxAzimuthAngle = 1.3;
+let balanceo = true; controls.addEventListener('start', () => { balanceo = false; grupo.rotation.y = 0; });
+const sol = new THREE.DirectionalLight(0xffffff, 2.2); sol.position.set(-45, 70, 110); sol.castShadow = true;
+sol.shadow.mapSize.set(2048, 2048); Object.assign(sol.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60 }); sol.shadow.bias = -0.0005;
+scene.add(sol, new THREE.HemisphereLight(0xffffff, 0xbbbbc4, 0.6));
+const piso = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({ opacity: 0.18 }));
+piso.position.z = -9; piso.receiveShadow = true; scene.add(piso);
+const grupo = new THREE.Group(); scene.add(grupo);
+
+/* textura de capas de impresión (líneas finas) para que se vea impreso en 3D */
+function capas() {
+  const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d');
+  for (let i = 0; i < 64; i++) { const v = 128 + (i % 4 < 2 ? 22 : -22); x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(0, i, 4, 1); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 16); return t;
+}
+const BUMP = capas();
+const mat = (hex) => new THREE.MeshPhysicalMaterial({ color: hex, roughness: 0.48, metalness: 0, clearcoat: 0.25, clearcoatRoughness: 0.6, bumpMap: BUMP, bumpScale: 0.25 });
+const matBase = mat(COLORES[st.base][1]), matLogo = mat(COLORES[st.logo][1]);
+const matMetal = new THREE.MeshStandardMaterial({ color: 0xd4d6db, metalness: 1, roughness: 0.22 });
+
+function ajustar() { const w = visor.clientWidth; renderer.setSize(w, w, false); camera.aspect = 1; camera.updateProjectionMatrix(); }
+addEventListener('resize', ajustar); ajustar();
+(function loop(t) { requestAnimationFrame(loop); if (balanceo) grupo.rotation.y = 0.5 * Math.sin((t || 0) / 1400); controls.update(); renderer.render(scene, camera); })();
+
+/* ---------- logo → campo de N×N ---------- */
+function leerLogo(img) {
+  const c = document.createElement('canvas'), lado = 400, k = Math.min(lado / img.width, lado / img.height);
+  c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0, c.width, c.height);
+  const d = x.getImageData(0, 0, c.width, c.height).data, W = c.width, H = c.height;
+  // fondo: promedio de las esquinas. Si es transparente, la tinta es lo opaco; si no, lo que difiere del fondo.
+  const esq = [0, W - 1, (H - 1) * W, H * W - 1].map(i => i * 4);
+  const transp = esq.some(i => d[i + 3] < 200);
+  const lum = (i) => (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) / 255;
+  const fondo = esq.reduce((a, i) => a + lum(i), 0) / 4;
+  const tinta = new Float32Array(W * H);
+  for (let p = 0; p < W * H; p++) {
+    const i = p * 4, a = d[i + 3] / 255;
+    tinta[p] = transp ? (a > 0.5 ? 1 : 0) : (a > 0.5 && Math.abs(lum(i) - fondo) > 0.22 ? 1 : 0);
+  }
+  return { W, H, tinta };
+}
+/* rasteriza el logo en la grilla con un margen; devuelve el campo y la escala (mm por celda) */
+function grilla(L, margen) {
+  const util = N - 2 * margen, k = util / Math.max(L.W, L.H), ox = (N - L.W * k) / 2, oy = (N - L.H * k) / 2;
+  const f = new Float32Array(N * N);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const sx = Math.floor((x - ox) / k), sy = Math.floor((y - oy) / k);
+    if (sx >= 0 && sy >= 0 && sx < L.W && sy < L.H) f[y * N + x] = L.tinta[sy * L.W + sx];
+  }
+  return f;
+}
+function desenfocar(f, r) {           // box blur separable (2 pasadas ≈ gaussiano): bordes suaves para el contorno
+  let a = f, b = new Float32Array(N * N);
+  for (let pase = 0; pase < 2; pase++) {
+    for (let y = 0; y < N; y++) { let s = 0; for (let x = -r; x <= r; x++) s += a[y * N + Math.min(N - 1, Math.max(0, x))];
+      for (let x = 0; x < N; x++) { b[y * N + x] = s / (2 * r + 1); s += a[y * N + Math.min(N - 1, x + r + 1)] - a[y * N + Math.max(0, x - r)]; } }
+    const c = new Float32Array(N * N);
+    for (let x = 0; x < N; x++) { let s = 0; for (let y = -r; y <= r; y++) s += b[Math.min(N - 1, Math.max(0, y)) * N + x];
+      for (let y = 0; y < N; y++) { c[y * N + x] = s / (2 * r + 1); s += b[Math.min(N - 1, y + r + 1) * N + x] - b[Math.max(0, y - r) * N + x]; } }
+    a = c;
+  }
+  return a;
+}
+function distancia(f) {               // distancia (en celdas) a la tinta más cercana: chamfer 3-4
+  const D = new Float32Array(N * N).map((_, i) => f[i] > 0.5 ? 0 : 1e9);
+  const pasar = (orden) => {
+    for (const y of orden.y) for (const x of orden.x) {
+      const i = y * N + x; let v = D[i];
+      for (const [dx, dy, w] of orden.v) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < N && Y < N) v = Math.min(v, D[Y * N + X] + w); }
+      D[i] = v;
+    }
+  };
+  const asc = [...Array(N).keys()], desc = [...asc].reverse();
+  pasar({ y: asc, x: asc, v: [[-1, 0, 1], [0, -1, 1], [-1, -1, 1.414], [1, -1, 1.414]] });
+  pasar({ y: desc, x: desc, v: [[1, 0, 1], [0, 1, 1], [1, 1, 1.414], [-1, 1, 1.414]] });
+  return D;
+}
+
+/* ---------- campo → contornos → sólidos ---------- */
+function formas3(campo, mmCelda, esp, z0) {
+  const multi = d3.contours().size([N, N]).thresholds([0.5])(Array.from(campo))[0].coordinates;
+  const shapes = [];
+  const pt = ([x, y]) => new THREE.Vector2((x - N / 2) * mmCelda, (N / 2 - y) * mmCelda);
+  const area = (r) => { let s = 0; for (let i = 0; i < r.length - 1; i++) s += r[i][0] * r[i + 1][1] - r[i + 1][0] * r[i][1]; return Math.abs(s / 2); };
+  multi.forEach(pol => {
+    if (area(pol[0]) < 6) return;
+    const sh = new THREE.Shape(pol[0].map(pt));
+    pol.slice(1).filter(h => area(h) > 3).forEach(h => sh.holes.push(new THREE.Path(h.map(pt))));
+    shapes.push(sh);
+  });
+  if (!shapes.length) return null;
+  const g = new THREE.ExtrudeGeometry(shapes, { depth: esp - 0.5, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.25, bevelSegments: 2, curveSegments: 4 });
+  g.translate(0, 0, z0 + 0.25);
+  // UV en z para que las líneas de capa queden horizontales en los costados
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) * 0.05, p.getZ(i) / 0.2 / 16);
+  return g;
+}
+
+function armar() {
+  grupo.clear();
+  const margen = st.forma === 'logo' ? 30 : 46;
+  let logo;
+  if (st.img) logo = grilla(st.img, margen);
+  else { // sin logo: un texto de muestra
+    const c = document.createElement('canvas'); c.width = 400; c.height = 160; const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, 400, 160); x.fillStyle = '#000'; x.font = '800 92px Poppins, Arial'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('LOGO', 200, 84);
+    logo = grilla(leerLogo(c), margen);
+  }
+  // base: contorno del logo engordado (forma de tu logo) o figura fija
+  let base = new Float32Array(N * N);
+  const ys = [], xs = [];
+  if (st.forma === 'logo') {
+    const D = distancia(logo), R = 14;
+    for (let i = 0; i < N * N; i++) base[i] = D[i] <= R ? 1 : 0;
+  } else {
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const u = (x - N / 2) / (N / 2 - 14), v = (y - N / 2 - 8) / (N / 2 - 14);
+      base[y * N + x] = st.forma === 'redondo' ? (u * u + v * v <= 0.72 ? 1 : 0) : (Math.abs(u) <= 0.92 && Math.abs(v) <= 0.6 ? 1 : 0);
+    }
+  }
+  // argolla: pestaña redonda arriba al centro, pegada a la forma
+  let top = N; for (let y = 0; y < N && top === N; y++) for (let x = Math.floor(N * 0.35); x < N * 0.65; x++) if (base[y * N + x]) { top = y; break; }
+  let cxT = N / 2;
+  { let s = 0, n = 0; for (let x = 0; x < N; x++) if (base[(top + 4) * N + x]) { s += x; n++; } if (n) cxT = s / n; }
+  const cyT = Math.max(16, top - 4), rT = 15, rH = 6.5;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const d = Math.hypot(x - cxT, y - cyT);
+    if (d <= rT || (Math.abs(x - cxT) <= rT * 0.8 && y >= cyT && y <= top + 8)) base[y * N + x] = 1;
+    if (d <= rH) base[y * N + x] = 0;
+  }
+  // escala: el lado más largo de la base mide 5 cm
+  let x0 = N, x1 = 0, y0 = N, y1 = 0;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (base[y * N + x]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const mm = MM / Math.max(x1 - x0, y1 - y0, 1);
+  const gb = formas3(desenfocar(base, 2), mm, ESP_BASE, 0);
+  const gl = formas3(desenfocar(logo.map((v, i) => v * base[i]), 1), mm, ESP_LOGO, ESP_BASE - 0.2);
+  const cy = ((y0 + y1) / 2 - N / 2) * mm, cx = ((x0 + x1) / 2 - N / 2) * mm;
+  [[gb, matBase], [gl, matLogo]].forEach(([g, m]) => { if (!g) return; const me = new THREE.Mesh(g, m); me.castShadow = me.receiveShadow = true; me.position.set(-cx, cy, 0); grupo.add(me); });
+  // argolla metálica pasando por el agujero
+  const ax = (cxT - N / 2) * mm - cx, ay = (N / 2 - cyT) * mm + cy;
+  const aro = new THREE.Mesh(new THREE.TorusGeometry(11, 0.9, 16, 80), matMetal);
+  aro.rotation.y = Math.PI / 2; aro.position.set(ax, ay + 9, ESP_BASE / 2); aro.castShadow = true; grupo.add(aro);
+}
+
+/* ---------- interfaz ---------- */
+function swatches(id, clave, nom, material) {
+  const el = document.getElementById(id);
+  el.innerHTML = COLORES.map((c, i) => `<div class="sw${i === st[clave] ? ' on' : ''}" title="${c[0]}" data-i="${i}" style="background:${c[1]}"></div>`).join('');
+  document.getElementById(nom).textContent = COLORES[st[clave]][0];
+  el.onclick = (e) => { const i = e.target.getAttribute('data-i'); if (i == null) return; st[clave] = +i; material.color.set(COLORES[+i][1]); swatches(id, clave, nom, material); };
+}
+function formas() {
+  const el = document.getElementById('formas');
+  el.innerHTML = FORMAS.map(f => `<button data-f="${f[0]}" class="${f[0] === st.forma ? 'on' : ''}">${f[1]}</button>`).join('');
+  el.onclick = (e) => { const f = e.target.getAttribute('data-f'); if (!f) return; st.forma = f; formas(); armar(); };
+}
+let logoPng = '';
+document.getElementById('archivo').onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    st.img = leerLogo(img);
+    const c = document.createElement('canvas'), k = Math.min(1, 1000 / Math.max(img.width, img.height));
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    logoPng = c.toDataURL('image/png').split(',')[1];
+    document.getElementById('txtSubir').textContent = '✓ ' + f.name + ' (tocá para cambiarlo)';
+    document.getElementById('guardar').disabled = false; document.getElementById('codigo').style.display = 'none';
+    balanceo = true; armar();
+  };
+  img.src = URL.createObjectURL(f);
+};
+document.getElementById('bajar').onclick = () => { const a = document.createElement('a'); a.download = 'mi-llavero-xtickers.png'; a.href = renderer.domElement.toDataURL('image/png'); a.click(); };
+document.getElementById('guardar').onclick = async () => {
+  const b = document.getElementById('guardar'), err = document.getElementById('err');
+  b.disabled = true; b.textContent = 'Guardando…'; err.textContent = '';
+  try {
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({
+      accion: 'llavero', nombre: document.getElementById('nombre').value, web: document.getElementById('web').value, logo: logoPng,
+      vista: renderer.domElement.toDataURL('image/png').split(',')[1], forma: FORMAS.find(f => f[0] === st.forma)[1],
+      colorBase: COLORES[st.base][0], colorLogo: COLORES[st.logo][0] }) }).then(r => r.json());
+    if (!r.ok) throw new Error(r.error || 'No se pudo guardar');
+    document.getElementById('cod').textContent = r.codigo;
+    document.getElementById('codigo').style.display = 'block';
+    b.textContent = 'Diseño guardado ✓';
+  } catch (e) { err.textContent = e.message + '. Probá de nuevo.'; b.disabled = false; b.textContent = 'Guardar mi diseño y comprar'; }
+};
+formas(); swatches('colBase', 'base', 'nomBase', matBase); swatches('colLogo', 'logo', 'nomLogo', matLogo);
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(armar);
+</script>
+</body>
+</html>
